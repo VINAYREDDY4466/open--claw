@@ -1,7 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import dotenv from 'dotenv';
 import { interpretMessage } from './services/ai.js';
-import { executeCommand, readFile } from './services/tools.js';
+import { executeCommand, readFile, createFolder, writeFile } from './services/tools.js';
 
 // Load environment variables
 dotenv.config();
@@ -82,6 +82,22 @@ bot.on('message', async (msg) => {
       case 'read_file':
         console.log(`📄 Reading file: ${action.input}`);
         response = await readFile(action.input);
+        break;
+
+      case 'create_folder':
+        console.log(`📁 Creating folder: ${action.input}`);
+        response = await createFolder(action.input);
+        break;
+
+      case 'write_file':
+        console.log(`✍️  Writing file`);
+        // Parse file path and content (separated by |)
+        const [filePath, fileContent] = action.input.split('|').map(s => s.trim());
+        if (!filePath || fileContent === undefined) {
+          response = '❌ Error: Invalid write_file format. Expected "file_path|file_content"';
+        } else {
+          response = await writeFile(filePath, fileContent);
+        }
         break;
 
       case 'none':

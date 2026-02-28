@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { readFile as fsReadFile } from 'fs/promises';
+import { readFile as fsReadFile, writeFile as fsWriteFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 
@@ -117,5 +117,57 @@ export async function readFile(filePath) {
     return content;
   } catch (error) {
     return `❌ Error reading file: ${error.message}`;
+  }
+}
+
+/**
+ * Creates a directory (and parent directories if needed)
+ * @param {string} dirPath - Path to the directory
+ * @returns {Promise<string>} Success or error message
+ */
+export async function createFolder(dirPath) {
+  try {
+    // Resolve and normalize path
+    const resolvedPath = path.resolve(dirPath);
+    
+    // Check if already exists
+    if (existsSync(resolvedPath)) {
+      return `ℹ️  Directory already exists: ${dirPath}`;
+    }
+
+    // Create directory with recursive option (creates parent dirs if needed)
+    await mkdir(resolvedPath, { recursive: true });
+    
+    return `✅ Directory created successfully: ${dirPath}`;
+  } catch (error) {
+    return `❌ Error creating directory: ${error.message}`;
+  }
+}
+
+/**
+ * Writes content to a file
+ * @param {string} filePath - Path to the file
+ * @param {string} content - Content to write
+ * @returns {Promise<string>} Success or error message
+ */
+export async function writeFile(filePath, content) {
+  try {
+    // Resolve and normalize path
+    const resolvedPath = path.resolve(filePath);
+    
+    // Get directory path
+    const dirPath = path.dirname(resolvedPath);
+    
+    // Create directory if it doesn't exist
+    if (!existsSync(dirPath)) {
+      await mkdir(dirPath, { recursive: true });
+    }
+
+    // Write file
+    await fsWriteFile(resolvedPath, content, 'utf-8');
+    
+    return `✅ File written successfully: ${filePath}`;
+  } catch (error) {
+    return `❌ Error writing file: ${error.message}`;
   }
 }
